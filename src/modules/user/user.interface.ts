@@ -1,14 +1,21 @@
 import { Types } from "mongoose";
 
 export enum Role{
+    SUPER_ADMIN= "SUPER_ADMIN",
     ADMIN= "ADMIN",
-    USER = "USER",
-    GUIDE= "GUIDE"
+    SENDER= "SENDER",
+    RECEIVER= "RECEIVER"
 }
 
 export interface IAuthProvider{
     provider: "google" | "credential";    // Google, Credential
     providerId: string;
+}
+export interface ISender {
+    role: Role.SENDER
+}
+export interface IReceiver {
+    role: Role.RECEIVER
 }
 
 export enum IsActive{
