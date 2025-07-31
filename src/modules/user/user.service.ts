@@ -9,8 +9,10 @@ import { envVars } from "../../config/env";
 
 
 const createUser = async(payload: Partial<IUser>) =>{
-    const {email, password, ...rest} = payload;
-
+    console.log("received Role from payload", payload.role)
+    const {email, password, role, ...rest} = payload;
+console.log("Payload", payload)
+console.log("role", role)
     const isUserExist = await User.findOne({email})
     if(isUserExist){
         throw new AppError(httpstatus.BAD_REQUEST, "User already exist")
@@ -23,6 +25,7 @@ const createUser = async(payload: Partial<IUser>) =>{
         email,
         password: hashedPassword,
         auths: [authProvider],
+        role,
         ...rest
     })
 

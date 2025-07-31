@@ -8,8 +8,8 @@ import { JwtPayload } from "jsonwebtoken";
 
 
 const createUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const user = await UserService.createUser(req.body)
-
+    const userPayload = req.body
+    const user = await UserService.createUser(userPayload)
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.CREATED,
@@ -24,7 +24,7 @@ const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunc
     const verifiedToken = req.user;
     const payload = req.body
     const user = await UserService.updateUser(userId, payload, verifiedToken as JwtPayload)
-
+    
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.CREATED,

@@ -19,13 +19,9 @@ try {
     }
     // const verifiedToken = jwt.verify(accessToken, 'secret')
     const verifiedToken = verifyToken(accessToken, envVars.JWT_ACCESS_SECRET) as JwtPayload
-    //  if(!verifiedToken){
-    //     console.log(verifiedToken)
-    //     throw new AppError(403, `You are not authorized ${verifiedToken}`)
-    // }
-    // if((verifiedToken as JwtPayload).role !== Role.ADMIN){
-    //     throw new AppError(403, "You are not permitted to view this route!!!")
-    // }
+    // console.log("verifiedToken", verifiedToken)
+    // console.log("verifiedToken role", verifiedToken.role)
+
     const isUserExist = await User.findOne({ email: verifiedToken.email })
     if (!isUserExist) {
         throw new AppError(httpStatus.BAD_REQUEST, "User does not Exist")
@@ -39,7 +35,7 @@ try {
     if (isUserExist.isDeleted) {
         throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
     }
-    
+    // problem
     if(!authRoles.includes(verifiedToken.role)){
         throw new AppError(403, "You are not permitted to view this route!!!")
     }

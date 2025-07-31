@@ -15,6 +15,8 @@ const statusLogShema = new Schema<IStatusLog>({
         type: Schema.Types.ObjectId,
         ref:"User"
     }
+},{
+    _id:false
 })
 export const StatusLog = model<IStatusLog>("StatusLog", statusLogShema)
 
