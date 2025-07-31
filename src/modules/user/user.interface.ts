@@ -11,10 +11,10 @@ export interface IAuthProvider{
     provider: "google" | "credential";    // Google, Credential
     providerId: string;
 }
-export interface ISender {
+export interface ISender extends IUser{
     role: Role.SENDER
 }
-export interface IReceiver {
+export interface IReceiver extends IUser{
     role: Role.RECEIVER
 }
 

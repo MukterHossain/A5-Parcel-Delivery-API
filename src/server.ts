@@ -3,6 +3,7 @@ import { Server } from 'http';
 import mongoose from 'mongoose';
 import app from './app';
 import { envVars } from './config/env';
+import { superAdmin } from './utils/superAdmin';
 
 
 
@@ -26,6 +27,7 @@ const startServer = async () => {
 
 (async () => {
     await startServer()
+    await superAdmin()
 })()
 
 

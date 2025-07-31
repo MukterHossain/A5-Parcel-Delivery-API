@@ -14,7 +14,6 @@ export interface IStatusLog{
     status: PARCEL_STATUS;
     location?: string;
     note?: string;
-    timestamp?:Date;
     updatedBy?: Types.ObjectId  // IUser
 }
 
@@ -33,6 +32,6 @@ export interface IParcel{
     statusLogs: IStatusLog[];
     isBlocked?: boolean;
     deliveryDate?: Date;
-    createdAt?: Date;
+    updatedAt?: Date;
 
 }

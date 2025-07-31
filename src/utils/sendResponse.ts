@@ -1,12 +1,17 @@
 import { Response } from "express"
 
 
+interface TMeta {
+    total:number
+}
+
 
 interface TResponse<T>{
     statusCode: number,
     success: boolean,
     message:string,
-    data:T
+    data:T,
+    meta?: TMeta
 }
 
 
