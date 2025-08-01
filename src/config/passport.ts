@@ -15,33 +15,22 @@ passport.use(
     }, async (email: string, password: string, done) => {
         try {
             const isUserExist = await User.findOne({ email })
-            // if (!isUserExist) {
-            //     return done(null, false, {message: "User  does not Exist"})
-            // }
             if (!isUserExist) {
                 return done("User  does not Exist")
             }
             if (!isUserExist.isVarified) {
-                // throw new AppError(httpStatus.BAD_REQUEST, "User is not deleted")
                 done("User is not deleted")
             }
             if (isUserExist.isActive === IsActive.BLOCKED || isUserExist.isActive === IsActive.INACTIVE) {
-                // throw new AppError(httpStatus.BAD_REQUEST, `User is ${isUserExist.isActive}`)
                 done(`User is ${isUserExist.isActive}`)
             }
             if (isUserExist.isDeleted) {
-                // throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
                 done("User is deleted")
             }
 
-
-
             const isGoogleAuthenticated = isUserExist.auths.some(providerObjects => providerObjects.provider === "google")
-            // if(isGoogleAuthenticated){
-            //     return done(null, false, {message: "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password."})
-            // }
             if (isGoogleAuthenticated && !isUserExist.password) {
-                return done("You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password.")
+                return done(null, false, {message: "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password."})
             }
 
             const isPasswordMatched = await bcryptjs.compare(password as string, isUserExist.password as string)
@@ -73,15 +62,12 @@ passport.use(
                 }
                 let isUserExist = await User.findOne({ email })
                 if (isUserExist && !isUserExist.isVarified) {
-                    // throw new AppError(httpStatus.BAD_REQUEST, "User is not deleted")
                     return done(null, false, {message: "user is not verified"})
                 }
                 if (isUserExist && (isUserExist.isActive === IsActive.BLOCKED || isUserExist.isActive === IsActive.INACTIVE)) {
-                    // throw new AppError(httpStatus.BAD_REQUEST, `User is ${isUserExist.isActive}`)
                     done(`User is ${isUserExist.isActive}`)
                 }
                 if (isUserExist && isUserExist.isDeleted) {
-                    // throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
                      return done(null, false, { message: "User is deleted" })
                 }
                 if (!isUserExist) {
@@ -89,7 +75,7 @@ passport.use(
                         email,
                         name: profile.displayName,
                         picture: profile.photos?.[0].value,
-                        role: Role.RECEIVER,
+                        role: Role.SENDER,
                         isVarified: true,
                         auths: [
                             {
@@ -107,13 +93,6 @@ passport.use(
         }
     )
 )
-
-// frontend localhost:5173/login?redirect=/booking -> localhost:5000/api/v1/auth/google?redirect=/booking -> passport -> Google OAuth Consent -> gmail login -> successful -> callback url localhost:5000/api/v1/auth/google/callback -> db store -> token
-
-// Bridge == Google -> user db store -> token
-//Custom -> email , password, role : USER, name... -> registration -> DB -> 1 User create
-//Google -> req -> google -> successful : Jwt Token : Role , email -> DB - Store -> token - api access
-
 
 passport.serializeUser((user: any, done: (err: any, id?: unknown) => void) => {
     done(null, user._id)

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express"
 // import AppError from "../../errorHandler/AppError"
@@ -8,20 +9,38 @@ import httpStatus from "http-status-codes"
 import AppError from "../../errorHandler/AppError"
 import { setAuthCookie } from "../../utils/setCookies"
 import { JwtPayload } from "jsonwebtoken"
+import { envVars } from "../../config/env"
+import { createUserToken } from "../../utils/userTokens"
+import passport from "passport"
 
 
 const credentialsLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("local", async(err:any, user:any, info:any)=>{
 
-    const loginInfo = await AuthServices.credentialsLogin(req.body)
+        if(err){ 
+            return next(new AppError(err.statusCode|| 401, err.message))
+        }
+        if(!user){
+            return next(new AppError(401, info.message))
+        }
 
-    setAuthCookie(res, loginInfo)
+        const userTokens = await createUserToken(user)
 
-    sendResponse(res, {
+        // delete user.toObject().password
+        const {password:pass, ...rest} = user.toObject()
+        setAuthCookie(res, userTokens)
+        sendResponse(res, {
         success: true,
         statusCode: httpStatus.CREATED,
         message: "User Logged In Successfully",
-        data: loginInfo
+        data: {
+            accessToken: userTokens.accessToken,
+            refreshToken: userTokens.refreshToken,
+            user:rest
+        }
+       
     })
+    })(req, res, next)
 })
 
 const getNewAccessToken = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -77,6 +96,28 @@ const resetPassword = catchAsync(async (req: Request, res: Response, next: NextF
     })
 })
 
+const googleCallbackController = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    let redirectTo = req.query.state ? req.query.state as string : ""
+    if(redirectTo.startsWith("/")){
+        redirectTo = redirectTo.slice(1)
+    }
+    const user = req.user;
+    console.log("user", user)
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, "User Not Found")
+    }
+    const tokenInfo = createUserToken(user)
+    setAuthCookie(res, tokenInfo)
+
+    // sendResponse(res, {
+    //     success: true,
+    //     statusCode: httpStatus.CREATED,
+    //     message: "Password Changed Successfully",
+    //     data: null
+    // })
+    res.redirect(`${envVars.FRONTEND_URL}/${redirectTo}`)
+})
+
 
 
 export const AuthControllers = {
@@ -87,5 +128,5 @@ export const AuthControllers = {
     resetPassword,
     // setPassword,
     // forgotPassword,
-    // googleCallbackController,
+    googleCallbackController,
 }
