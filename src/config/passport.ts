@@ -16,16 +16,16 @@ passport.use(
         try {
             const isUserExist = await User.findOne({ email })
             if (!isUserExist) {
-                return done("User  does not Exist")
+                return done(null, false, {message:"User  does not Exist"})
             }
             if (!isUserExist.isVarified) {
-                done("User is not deleted")
+                return done(null, false, {message:"User  is not verified"})
             }
             if (isUserExist.isActive === IsActive.BLOCKED || isUserExist.isActive === IsActive.INACTIVE) {
-                done(`User is ${isUserExist.isActive}`)
+                return done(null, false, {message:`User is ${isUserExist.isActive}`})
             }
             if (isUserExist.isDeleted) {
-                done("User is deleted")
+                return done(null, false, {message:"User is deleted"})
             }
 
             const isGoogleAuthenticated = isUserExist.auths.some(providerObjects => providerObjects.provider === "google")
