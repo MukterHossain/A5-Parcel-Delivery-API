@@ -1,4 +1,4 @@
-import { IAuthProvider, IUser, Role } from "./user.interface";
+import { IAuthProvider, IsActive, IUser, Role } from "./user.interface";
 import bcryptjs from "bcryptjs"
 import { User } from "./user.model";
 import AppError from "../../errorHandler/AppError";
@@ -77,11 +77,41 @@ const getAllUsers = async() =>{
         }
     }
 }
+const blockUser = async(userId:string) =>{
+
+    const user = await User.findById(userId)
+    if(!user){
+        throw new AppError(httpstatus.NOT_FOUND, "User not found")
+    }
+    if(user.isActive === IsActive.BLOCKED){
+        throw new AppError(httpstatus.BAD_REQUEST, "User is already blocked!")
+    }
+    user.isActive = IsActive.BLOCKED
+    await user.save()
+   
+    return user;
+}
+const unblockUser = async(userId:string) =>{
+
+    const user = await User.findById(userId)
+    if(!user){
+        throw new AppError(httpstatus.NOT_FOUND, "User not found")
+    }
+    if(user.isActive === IsActive.ACTIVE){
+        throw new AppError(httpstatus.BAD_REQUEST, "User is already active")
+    }
+    user.isActive = IsActive.ACTIVE
+    await user.save()
+   
+    return user;
+}
 
 
 
 export const UserService = {
     createUser,
     getAllUsers,
-    updateUser
+    updateUser,
+    blockUser,
+    unblockUser
 }

@@ -14,6 +14,10 @@ const statusLogShema = new Schema<IStatusLog>({
     updatedBy: {
         type: Schema.Types.ObjectId,
         ref:"User"
+    },
+    timestamp: {
+        type: Date,
+        default:Date.now
     }
 },{
     _id:false

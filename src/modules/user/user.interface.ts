@@ -21,7 +21,8 @@ export interface IReceiver extends IUser{
 export enum IsActive{
     ACTIVE= "ACTIVE",
     INACTIVE = "INACTIVE",
-    BLOCKED = "BLOCKED"
+    BLOCKED = "BLOCKED",
+    UNBLOCKED = "UNBLOCKED",
 }
 
 export interface IUser{
