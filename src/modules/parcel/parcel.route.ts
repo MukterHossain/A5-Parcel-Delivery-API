@@ -8,16 +8,27 @@ const router = Router()
 
 
 
+// Sender
 router.post("/", checkAuth(Role.SENDER), ParcelController.createParcel)
 router.get("/me", checkAuth(Role.SENDER), ParcelController.getAllParcel)
-router.get("/incoming", checkAuth(Role.RECEIVER), ParcelController.getIncomingParcels)
 router.patch("/cancel/:id", checkAuth(Role.SENDER), ParcelController.cancelParcel)
+
+// Sender and Receiver
+router.get("/:id/status-log", checkAuth(Role.SENDER, Role.RECEIVER), ParcelController.getParcelStatusLog)
+
+// Receiver
+router.get("/incoming", checkAuth(Role.RECEIVER), ParcelController.getIncomingParcels)
 router.patch("/confirm-delivery/:id", checkAuth(Role.RECEIVER), ParcelController.confirmDelivery)
+router.get("/delivery-history", checkAuth(Role.RECEIVER), ParcelController.getDeliveryHistory)
 
 
 // ‍Admin
 router.get("/", checkAuth(Role.ADMIN), ParcelController.getAllParcels)
-router.patch("/:id/status", checkAuth(Role.ADMIN), ParcelController.updateParcelStatus)
+router.patch("/status-update/:id", checkAuth(Role.ADMIN), ParcelController.updateParcelStatus)
+router.patch("/block/:id", checkAuth(Role.ADMIN), ParcelController.blockParcel)
+
+
+router.get("/track/:trackingId", checkAuth(...Object.values(Role)), ParcelController.getTrackingParcel)
 
 
 

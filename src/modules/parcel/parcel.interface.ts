@@ -2,12 +2,13 @@ import { Types } from "mongoose";
 
 export enum PARCEL_STATUS{
     REQUESTED = "REQUESTED",
-    APROVED= "APROVED",
+    APPROVED= "APPROVED",
     DISPATCHED = "DISPATCHED",
     IN_TRANSIT = "IN_TRANSIT",
     DELIVERED = "DELIVERED",
     CANCELED = "CANCELED",
     BLOCKED = "BLOCKED",
+    UNBLOCKED = "UNBLOCKED",
 }
 
 export interface IStatusLog{

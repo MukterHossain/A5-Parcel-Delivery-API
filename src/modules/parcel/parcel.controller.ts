@@ -7,6 +7,7 @@ import AppError from "../../errorHandler/AppError";
 import { Parcel } from "./parcel.model";
 import { IUser } from "../user/user.interface";
 import { JwtPayload } from "jsonwebtoken";
+import { PARCEL_STATUS } from "./parcel.interface";
 
 
 
@@ -46,27 +47,26 @@ const getAllParcel = catchAsync(async(req:Request, res: Response, next: NextFunc
         meta: result.meta
     })
 })
-const getIncomingParcels = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
-const parcel = await Parcel.find().limit(1)
-    console.log("Sample parcel", parcel)
+const getParcelStatusLog = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
 
-    // const receiverId = req.user?.userId
-    const receiver = req.user as JwtPayload
-    if(!receiver){
-        throw new AppError(401, "You are not authorized")
-    }
-       
-    const result = await ParcelService.getAllParcel(receiver.userId)
-    console.log("result", result)
+   // const senderId = req.user?.userId
+    const {id: parcelId} = req.params
+
+    // if(!sender){
+    //     throw new AppError(401, "You are not authorized")
+    // }
+    
+    const result = await ParcelService.getParcelStatusLog(parcelId)
+    console.log("Parcel Status log", result)
 
     sendResponse(res, {
         success:true,
         statusCode: 200,
-        message: "Incoming parcels retrived successfully",
-        data: result.data,
-        meta: result.meta
+        message: "Parcel status logs retrived successfully",
+        data: result
     })
 })
+
 const cancelParcel = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
     
     const user = req.user as JwtPayload
@@ -81,6 +81,48 @@ const cancelParcel = catchAsync(async(req:Request, res: Response, next: NextFunc
         data: result
     })
 })
+const getIncomingParcels = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
+const parcels = await Parcel.find().limit(1)
+    console.log("Sample parcel", parcels)
+
+    // const receiverId = req.user?.userId
+    const receiverId = req.user as JwtPayload
+    if(!receiverId){
+        throw new AppError(401, "You are not authorized")
+    }
+       
+    const result = await ParcelService.getIncomingParcels(receiverId.userId)
+    console.log("result", result)
+
+    sendResponse(res, {
+        success:true,
+        statusCode: 200,
+        message: "Incoming parcels retrived successfully",
+        data: result.data,
+        meta: result.meta
+    })
+})
+const getDeliveryHistory = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
+    
+    // const receiverId = req.user?.userId
+    const receiverId = req.user as JwtPayload
+    console.log("Sample receiverId", receiverId)
+    if(!receiverId){
+        throw new AppError(401, "Unauthorized: Receiver ID not found")
+    }
+       
+    const result = await ParcelService.getDeliveryHistory(receiverId.userId)
+    console.log("result", result)
+
+    sendResponse(res, {
+        success:true,
+        statusCode: 200,
+        message: "Incoming parcels retrived successfully",
+        data: result.data,
+        meta: result.meta
+    })
+})
+
 const confirmDelivery = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
     
     const user = req.user as JwtPayload
@@ -132,6 +174,34 @@ const updateParcelStatus = catchAsync(async(req:Request, res: Response, next: Ne
         data: result
     })
 })
+const blockParcel = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
+    
+    const {id} = req.params
+    const admin = req.user as JwtPayload
+    const adminId = admin.userId
+       
+    const result = await ParcelService.blockParcel(id,  adminId as string)
+
+    sendResponse(res, {
+        success:true,
+        statusCode: 200,
+        message: `Parcel ${result.isBlocked ? PARCEL_STATUS.BLOCKED : PARCEL_STATUS.UNBLOCKED}`,
+        data: result
+    })
+})
+const getTrackingParcel = catchAsync(async(req:Request, res: Response, next: NextFunction) =>{
+    
+    const {trackingId} = req.params
+       
+    const result = await ParcelService.getTrackingParcel(trackingId)
+
+    sendResponse(res, {
+        success:true,
+        statusCode: 200,
+        message: `Parcel tracking data retrieved successfully`,
+        data: result
+    })
+})
 
 
 
@@ -139,8 +209,12 @@ export const ParcelController = {
     createParcel,
     getAllParcel,
     getIncomingParcels,
+    getParcelStatusLog,
     cancelParcel,
+    getDeliveryHistory,
     confirmDelivery,
     getAllParcels,
-    updateParcelStatus
+    updateParcelStatus,
+    blockParcel,
+    getTrackingParcel
 }
