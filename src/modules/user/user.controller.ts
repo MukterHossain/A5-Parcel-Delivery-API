@@ -70,6 +70,20 @@ const unblockUser = catchAsync(async (req: Request, res: Response, next: NextFun
         data: result
     })
 })
+const updateUserRole = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const {_id:adminId} = req.user as JwtPayload
+    const userId = req.params.id
+    const {role} = req.body
+    const result = await UserService.updateUserRole(adminId, userId, role)
+    console.log("updateUserRole User", result)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "User role updated Successfully",
+        data: result
+    })
+})
 
 
 
@@ -79,5 +93,6 @@ export const UserController = {
     getAllUsers,
     updateUser,
     blockUser,
-    unblockUser
+    unblockUser,
+    updateUserRole
 }

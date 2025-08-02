@@ -47,6 +47,7 @@ Parcel Delivery API is a backend service for managing parcel delivery operations
 - `PATCH(/api/user/:id)`  upadte user
 - `PATCH(/api/user/block/:id)`  User block (by admin)
 - `PATCH(/api/user/unblock/:id)`  User unblock or active (by admin)
+- `PATCH(/api/user/update-role/:id)`  User role update (by admin)
 
 ### **💼 Parcel API endpoinds**
 #### ➡️ **Sender**

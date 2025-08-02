@@ -35,7 +35,7 @@ return parcel
 const getAllParcel = async(senderId:string) =>{
 
 const parcels = await Parcel.find({sender:senderId}).sort({createdAt: -1})
-const totalParcel = await Parcel.countDocuments()
+const totalParcel = await Parcel.countDocuments({sender:senderId})
 return {
     data:parcels,
     meta:{

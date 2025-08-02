@@ -17,6 +17,12 @@ console.log("role", role)
     if(isUserExist){
         throw new AppError(httpstatus.BAD_REQUEST, "User already exist")
     }
+    if(role === Role.ADMIN){
+        throw new AppError(httpstatus.BAD_REQUEST, "Admin already exist!")
+    }
+    if(role === Role.SUPER_ADMIN){
+        throw new AppError(httpstatus.BAD_REQUEST, "Super Admin already exist!")
+    }
     const hashedPassword = await bcryptjs.hash(password as string, 10)
     
     const authProvider: IAuthProvider = {provider: "credential", providerId: email as string}
@@ -105,6 +111,24 @@ const unblockUser = async(userId:string) =>{
    
     return user;
 }
+const updateUserRole = async(adminId:string, userId:string, role: Role) =>{
+
+    if(adminId === userId){
+        throw new AppError(httpstatus.BAD_REQUEST, "You cannot change your own role")
+    }
+    const user = await User.findById(userId)
+    if(!user){
+        throw new AppError(httpstatus.NOT_FOUND, "User not found")
+    }
+    if(role === Role.ADMIN){
+         throw new AppError(httpstatus.BAD_REQUEST, "Admin already exists.")
+    }
+    user.role = role
+
+    await user.save()
+   
+    return user;
+}
 
 
 
@@ -113,5 +137,6 @@ export const UserService = {
     getAllUsers,
     updateUser,
     blockUser,
-    unblockUser
+    unblockUser,
+    updateUserRole
 }

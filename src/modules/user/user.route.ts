@@ -16,6 +16,7 @@ router.get("/all-users", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), UserController
 router.patch("/:id", validateRequest(updateUserZodSchema),  checkAuth(...Object.values(Role)), UserController.updateUser)
 router.patch("/block/:id", validateRequest(updateUserZodSchema),  checkAuth(Role.ADMIN,), UserController.blockUser)
 router.patch("/unblock/:id", validateRequest(updateUserZodSchema),  checkAuth(Role.ADMIN,), UserController.unblockUser)
+router.patch("/update-role/:id", validateRequest(updateUserZodSchema),  checkAuth(Role.ADMIN,), UserController.updateUserRole)
 
 
 
