@@ -43,7 +43,6 @@ process.on("unhandledRejection", (err) => {
     }
     process.exit(1)
 })
-// Promise.reject(new Error("Unhandled Rejection!"))
 
 // uncaughtException  error
 process.on("uncaughtException", (err) => {
@@ -55,7 +54,6 @@ process.on("uncaughtException", (err) => {
     }
     process.exit(1)
 })
-// throw new Error("I forgot to handle this local erro !")
 
 
 // SIGTERM error

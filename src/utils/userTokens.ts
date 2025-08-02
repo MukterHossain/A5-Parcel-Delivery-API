@@ -6,26 +6,24 @@ import { generateToken, verifyToken } from "./jwt";
 import httpStatus from "http-status-codes"
 import AppError from "../errorHandler/AppError";
 
-export const createUserToken = (user: Partial<IUser>)=>{
+export const createUserToken = (user: Partial<IUser>) => {
     const jwtPayload = {
-            userId: user._id,
-            email: user.email,
-            role: user.role
-        }
-        const accessToken = generateToken(jwtPayload, envVars.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRE)
-    
-        const refreshToken = generateToken(jwtPayload, envVars.JWT_REFRESH_SECRET, envVars.JWT_REFRESH_EXPIRES)
-        
+        userId: user._id,
+        email: user.email,
+        role: user.role
+    }
+    const accessToken = generateToken(jwtPayload, envVars.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRE)
 
+    const refreshToken = generateToken(jwtPayload, envVars.JWT_REFRESH_SECRET, envVars.JWT_REFRESH_EXPIRES)
 
-        return {
-            accessToken, 
-            refreshToken
-        }
+    return {
+        accessToken,
+        refreshToken
+    }
 }
 
 
-export const createNewAccessTokenWithRefreshToken= async(refreshToken:string) =>{
+export const createNewAccessTokenWithRefreshToken = async (refreshToken: string) => {
     const verifiedRefreshToken = verifyToken(refreshToken, envVars.JWT_REFRESH_SECRET) as JwtPayload
 
     const isUserExist = await User.findOne({ email: verifiedRefreshToken.email })
@@ -38,14 +36,11 @@ export const createNewAccessTokenWithRefreshToken= async(refreshToken:string) =>
     if (isUserExist.isDeleted) {
         throw new AppError(httpStatus.BAD_REQUEST, "User deleted")
     }
- const jwtPayload = {
+    const jwtPayload = {
         userId: isUserExist._id,
         email: isUserExist.email,
         role: isUserExist.role
     }
-    // const accessToken = jwt.sign(jwtPayload, 'secret', {
-    //     expiresIn: '30d'
-    // })
     const accessToken = generateToken(jwtPayload, envVars.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRE)
 
     return accessToken

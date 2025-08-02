@@ -1,8 +1,7 @@
 /* eslint-disable no-console */
+
 import { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
-// import AppError from "../errorHelpers/AppError";
-// import { verifyToken } from "../utils/jwt";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../modules/user/user.model";
 import httpStatus from "http-status-codes"
@@ -17,10 +16,8 @@ try {
     if(!accessToken){
         throw new AppError(403, "No Token Recieved")
     }
-    // const verifiedToken = jwt.verify(accessToken, 'secret')
     const verifiedToken = verifyToken(accessToken, envVars.JWT_ACCESS_SECRET) as JwtPayload
-    // console.log("verifiedToken", verifiedToken)
-    // console.log("verifiedToken role", verifiedToken.role)
+
 
     const isUserExist = await User.findOne({ email: verifiedToken.email })
     if (!isUserExist) {
@@ -35,11 +32,10 @@ try {
     if (isUserExist.isDeleted) {
         throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
     }
-    // problem
+
     if(!authRoles.includes(verifiedToken.role)){
         throw new AppError(403, "You are not permitted to view this route!!!")
     }
-    console.log(verifiedToken)
     req.user = verifiedToken
     next()
 } catch (error) {

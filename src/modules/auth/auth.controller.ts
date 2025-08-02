@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express"
-// import AppError from "../../errorHandler/AppError"
 import { catchAsync } from "../../utils/catchAsync"
 import { sendResponse } from "../../utils/sendResponse"
 import { AuthServices } from "./auth.service"
 import httpStatus from "http-status-codes"
 import AppError from "../../errorHandler/AppError"
 import { setAuthCookie } from "../../utils/setCookies"
-import { JwtPayload } from "jsonwebtoken"
 import { envVars } from "../../config/env"
 import { createUserToken } from "../../utils/userTokens"
 import passport from "passport"
@@ -25,8 +23,6 @@ const credentialsLogin = catchAsync(async (req: Request, res: Response, next: Ne
         }
 
         const userTokens = await createUserToken(user)
-
-        // delete user.toObject().password
         const {password:pass, ...rest} = user.toObject()
         setAuthCookie(res, userTokens)
         sendResponse(res, {
@@ -88,7 +84,6 @@ const googleCallbackController = catchAsync(async (req: Request, res: Response, 
         redirectTo = redirectTo.slice(1)
     }
     const user = req.user;
-    console.log("user", user)
     if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, "User Not Found")
     }

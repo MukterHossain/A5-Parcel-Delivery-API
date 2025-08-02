@@ -7,7 +7,7 @@ import { ParcelRoutes } from "../modules/parcel/parcel.route";
 export const router = Router()
 
 
-const moduleRouters =[
+const moduleRouters = [
     {
         path: "/user",
         route: UserRoutes

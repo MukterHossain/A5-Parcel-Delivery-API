@@ -24,7 +24,7 @@ const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunc
     const verifiedToken = req.user;
     const payload = req.body
     const user = await UserService.updateUser(userId, payload, verifiedToken as JwtPayload)
-    
+
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.CREATED,
@@ -36,7 +36,6 @@ const updateUser = catchAsync(async (req: Request, res: Response, next: NextFunc
 
 const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const result = await UserService.getAllUsers()
-    console.log(result)
 
     sendResponse(res, {
         success: true,
@@ -47,9 +46,8 @@ const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFun
     })
 })
 const blockUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const {id} = req.params
+    const { id } = req.params
     const result = await UserService.blockUser(id)
-    console.log("Blocked User", result)
 
     sendResponse(res, {
         success: true,
@@ -59,9 +57,8 @@ const blockUser = catchAsync(async (req: Request, res: Response, next: NextFunct
     })
 })
 const unblockUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const {id} = req.params
+    const { id } = req.params
     const result = await UserService.unblockUser(id)
-    console.log("Blocked User", result)
 
     sendResponse(res, {
         success: true,
@@ -71,11 +68,10 @@ const unblockUser = catchAsync(async (req: Request, res: Response, next: NextFun
     })
 })
 const updateUserRole = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const {_id:adminId} = req.user as JwtPayload
+    const { _id: adminId } = req.user as JwtPayload
     const userId = req.params.id
-    const {role} = req.body
+    const { role } = req.body
     const result = await UserService.updateUserRole(adminId, userId, role)
-    console.log("updateUserRole User", result)
 
     sendResponse(res, {
         success: true,

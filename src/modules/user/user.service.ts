@@ -8,24 +8,24 @@ import { envVars } from "../../config/env";
 
 
 
-const createUser = async(payload: Partial<IUser>) =>{
+const createUser = async (payload: Partial<IUser>) => {
     console.log("received Role from payload", payload.role)
-    const {email, password, role, ...rest} = payload;
-console.log("Payload", payload)
-console.log("role", role)
-    const isUserExist = await User.findOne({email})
-    if(isUserExist){
+    const { email, password, role, ...rest } = payload;
+    console.log("Payload", payload)
+    console.log("role", role)
+    const isUserExist = await User.findOne({ email })
+    if (isUserExist) {
         throw new AppError(httpstatus.BAD_REQUEST, "User already exist")
     }
-    if(role === Role.ADMIN){
+    if (role === Role.ADMIN) {
         throw new AppError(httpstatus.BAD_REQUEST, "Admin already exist!")
     }
-    if(role === Role.SUPER_ADMIN){
+    if (role === Role.SUPER_ADMIN) {
         throw new AppError(httpstatus.BAD_REQUEST, "Super Admin already exist!")
     }
     const hashedPassword = await bcryptjs.hash(password as string, 10)
-    
-    const authProvider: IAuthProvider = {provider: "credential", providerId: email as string}
+
+    const authProvider: IAuthProvider = { provider: "credential", providerId: email as string }
 
     const user = await User.create({
         email,
@@ -39,9 +39,9 @@ console.log("role", role)
 }
 
 
-const updateUser = async(userId: string, payload: Partial<IUser>, decodedToken: JwtPayload) =>{
+const updateUser = async (userId: string, payload: Partial<IUser>, decodedToken: JwtPayload) => {
     const ifUserExist = await User.findById(userId)
-    if(!ifUserExist){
+    if (!ifUserExist) {
         throw new AppError(httpstatus.NOT_FOUND, "User not Found")
     }
     if (decodedToken.role === Role.ADMIN && ifUserExist.role === Role.SUPER_ADMIN) {
@@ -49,84 +49,83 @@ const updateUser = async(userId: string, payload: Partial<IUser>, decodedToken: 
     }
 
 
-    if(payload.role){
-        if(decodedToken.role === Role.SENDER || decodedToken.role === Role.RECEIVER){
+    if (payload.role) {
+        if (decodedToken.role === Role.SENDER || decodedToken.role === Role.RECEIVER) {
             throw new AppError(httpstatus.FORBIDDEN, "You are not authorized")
         }
-        if(payload.role === Role.SUPER_ADMIN &&  decodedToken.role === Role.ADMIN){
-            throw new AppError(httpstatus.FORBIDDEN, "You are not authorized")
-        }
-    }
-    if(payload.isActive || payload.isDeleted || payload.isVarified){
-        if(decodedToken.role === Role.SENDER || decodedToken.role === Role.RECEIVER){
+        if (payload.role === Role.SUPER_ADMIN && decodedToken.role === Role.ADMIN) {
             throw new AppError(httpstatus.FORBIDDEN, "You are not authorized")
         }
     }
-    if(payload.password){
+    if (payload.isActive || payload.isDeleted || payload.isVarified) {
+        if (decodedToken.role === Role.SENDER || decodedToken.role === Role.RECEIVER) {
+            throw new AppError(httpstatus.FORBIDDEN, "You are not authorized")
+        }
+    }
+    if (payload.password) {
         payload.password = await bcryptjs.hash(payload.password, envVars.BCRYPT_SALT_ROUND)
     }
-    const newUpdatedUser = await User.findByIdAndUpdate(userId, payload, {new: true, runValidators: true})
+    const newUpdatedUser = await User.findByIdAndUpdate(userId, payload, { new: true, runValidators: true })
     return newUpdatedUser
 }
 
 
-const getAllUsers = async() =>{
+const getAllUsers = async () => {
 
     const users = await User.find()
     const totalUsers = await User.countDocuments()
-    console.log(totalUsers)
-   
+
     return {
-        data:users,
+        data: users,
         meta: {
             total: totalUsers
         }
     }
 }
-const blockUser = async(userId:string) =>{
+const blockUser = async (userId: string) => {
 
     const user = await User.findById(userId)
-    if(!user){
+    if (!user) {
         throw new AppError(httpstatus.NOT_FOUND, "User not found")
     }
-    if(user.isActive === IsActive.BLOCKED){
+    if (user.isActive === IsActive.BLOCKED) {
         throw new AppError(httpstatus.BAD_REQUEST, "User is already blocked!")
     }
     user.isActive = IsActive.BLOCKED
     await user.save()
-   
+
     return user;
 }
-const unblockUser = async(userId:string) =>{
+const unblockUser = async (userId: string) => {
 
     const user = await User.findById(userId)
-    if(!user){
+    if (!user) {
         throw new AppError(httpstatus.NOT_FOUND, "User not found")
     }
-    if(user.isActive === IsActive.ACTIVE){
+    if (user.isActive === IsActive.ACTIVE) {
         throw new AppError(httpstatus.BAD_REQUEST, "User is already active")
     }
     user.isActive = IsActive.ACTIVE
     await user.save()
-   
+
     return user;
 }
-const updateUserRole = async(adminId:string, userId:string, role: Role) =>{
+const updateUserRole = async (adminId: string, userId: string, role: Role) => {
 
-    if(adminId === userId){
+    if (adminId === userId) {
         throw new AppError(httpstatus.BAD_REQUEST, "You cannot change your own role")
     }
     const user = await User.findById(userId)
-    if(!user){
+    if (!user) {
         throw new AppError(httpstatus.NOT_FOUND, "User not found")
     }
-    if(role === Role.ADMIN){
-         throw new AppError(httpstatus.BAD_REQUEST, "Admin already exists.")
+    if (role === Role.ADMIN) {
+        throw new AppError(httpstatus.BAD_REQUEST, "Admin already exists.")
     }
     user.role = role
 
     await user.save()
-   
+
     return user;
 }
 
