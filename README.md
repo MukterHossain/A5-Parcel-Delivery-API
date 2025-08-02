@@ -49,17 +49,17 @@ Parcel Delivery API is a backend service for managing parcel delivery operations
 - `PATCH(/api/user/unblock/:id)`  User unblock or active (by admin)
 
 ### **💼 Parcel API endpoinds**
-  **Sender**
+#### **Sender**
 - `POST(/api/parcels/)`  create parcel
 - `GET(/api/parcels/me)`  get all parcels
 - `PATCH(/api/parcels/cancel:id)`  cancel parcels
-    **Sender and Receiver**
+ #### **Sender and Receiver**
 - `GET(/api/parcels/:id/status-log)`  get Parcel status log
-    **Receiver**
+  #### **Receiver**
 - `GET(/api/parcels/incoming)`  get incoming parcel
 - `PATCH(/api/parcels/confirm-delivery/:id)`  confirm delivery
-  🔹`GET(/api/parcels/delivery-history)`  get delivery history
-    **Admin**
+- `GET(/api/parcels/delivery-history)`  get delivery history
+ #### **Admin**
 - `GET(/api/parcels/)`  get all parcels
 - `PATCH(/api/parcels/status-update/:id)`  update status
 - `PATCH(/api/parcels/block/:id)`  Block parcel
