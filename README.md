@@ -65,4 +65,4 @@ Parcel Delivery API is a backend service for managing parcel delivery operations
 - `PATCH(/api/parcels/status-update/:id)`  update status
 - `PATCH(/api/parcels/block/:id)`  Block parcel
 #### ➡️ **All user**
-- `PATCH(/api/parcels/track/:trackingId)`  Block parcel
+- `PATCH(/api/parcels/track/:trackingId)`  tracking parcel
