@@ -29,7 +29,10 @@ const userSchema = new Schema<IUser>({
         default: IsActive.ACTIVE,
     },
     isVarified: {type: Boolean, default:false},
-    auths: [authPorviderSchema],
+    auths: { 
+        type:[authPorviderSchema],
+        default:[]
+    },
 },{
     timestamps:true,
     versionKey: false

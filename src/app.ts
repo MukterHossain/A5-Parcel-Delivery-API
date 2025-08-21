@@ -21,7 +21,6 @@ app.use(expressSession({
 app.use(express.json())
 app.set("trust proxy", 1)
 app.use(express.urlencoded({extended: true}))
-app.use(cors())
 app.use(cookieParser())
 app.use(passport.initialize())
 app.use(passport.session())
