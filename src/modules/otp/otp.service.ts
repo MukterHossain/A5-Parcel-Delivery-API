@@ -9,7 +9,7 @@ import { sendEmail } from "../../utils/sendEmail";
 
 
 
-const OTP_EXPIRATION = 2 * 60 // 2minute
+const OTP_EXPIRATION = 5 * 60 // 5minute
   
 const generateOtp = (length=6) => {
    const otp = crypto.randomInt(10 ** length).toString()

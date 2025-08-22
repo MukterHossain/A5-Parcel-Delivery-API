@@ -69,7 +69,13 @@ const updateUser = async (userId: string, payload: Partial<IUser>, decodedToken:
     return newUpdatedUser
 }
 
+const getMe = async (userId:string) => {
+    const user = await User.findById(userId).select("-password")
 
+    return {
+        data: user
+    }
+}
 const getAllUsers = async () => {
 
     const users = await User.find()
@@ -134,6 +140,7 @@ const updateUserRole = async (adminId: string, userId: string, role: Role) => {
 export const UserService = {
     createUser,
     getAllUsers,
+    getMe,
     updateUser,
     blockUser,
     unblockUser,

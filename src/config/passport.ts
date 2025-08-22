@@ -17,10 +17,10 @@ passport.use(
         try {
             const isUserExist = await User.findOne({ email })
             if (!isUserExist) {
-                return done(null, false, {message:"User  does not Exist"})
+                return done(null, false, {message:"User does not Exist"})
             }
             if (!isUserExist.isVarified) {
-                return done(null, false, {message:"User  is not verified"})
+                return done(null, false, {message:"User is not verified"})
             }
             if (isUserExist.isActive === IsActive.BLOCKED || isUserExist.isActive === IsActive.INACTIVE) {
                 return done(null, false, {message:`User is ${isUserExist.isActive}`})
