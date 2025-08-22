@@ -12,9 +12,7 @@ import { sendEmail } from "../../utils/sendEmail";
 const OTP_EXPIRATION = 2 * 60 // 2minute
   
 const generateOtp = (length=6) => {
-   // 6 digit otp
    const otp = crypto.randomInt(10 ** length).toString()
-   // 10 ** 5 => 10 * 10 *10 *10 *10 * 10 => 1000000
    return otp
 }
 
@@ -46,8 +44,7 @@ const sendOTP = async (email: string, name: string) => {
    })
 }
 const verifyOTP = async (email: string, otp: string) => {
-   // const user = await User.findOne({email, isVarified: false})
-   const user = await User.findOne({email})
+  const user = await User.findOne({email})
    if(!user){
     throw new AppError(404, "User not found")
    }
