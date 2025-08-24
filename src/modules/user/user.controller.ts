@@ -56,6 +56,16 @@ const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFun
         meta: result.meta
     })
 })
+const getAllReceivers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const result = await UserService.getAllReceivers()
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "All Users Retrived Successfully",
+        data: result.data
+    })
+})
 const blockUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params
     const result = await UserService.blockUser(id)
@@ -99,6 +109,7 @@ export const UserController = {
     createUser,
     getMe,
     getAllUsers,
+    getAllReceivers,
     updateUser,
     blockUser,
     unblockUser,

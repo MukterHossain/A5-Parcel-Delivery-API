@@ -88,6 +88,15 @@ const getAllUsers = async () => {
         }
     }
 }
+
+const getAllReceivers = async () => {
+
+    const users = await User.find({role: Role.RECEIVER}).select("_id name email")
+
+    return {
+        data: users
+    }
+}
 const blockUser = async (userId: string) => {
 
     const user = await User.findById(userId)
@@ -140,6 +149,7 @@ const updateUserRole = async (adminId: string, userId: string, role: Role) => {
 export const UserService = {
     createUser,
     getAllUsers,
+    getAllReceivers,
     getMe,
     updateUser,
     blockUser,
