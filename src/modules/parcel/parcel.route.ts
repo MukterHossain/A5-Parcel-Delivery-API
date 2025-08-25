@@ -24,6 +24,7 @@ router.get("/delivery-history", checkAuth(Role.RECEIVER), ParcelController.getDe
 
 // ‍Admin
 router.get("/", checkAuth(Role.ADMIN), ParcelController.getAllParcels)
+router.get("/analytics", checkAuth(Role.ADMIN), ParcelController.getAnalytics)
 router.patch("/status-update/:id", checkAuth(Role.ADMIN), ParcelController.updateParcelStatus)
 router.patch("/block/:id", checkAuth(Role.ADMIN), ParcelController.blockParcel)
 

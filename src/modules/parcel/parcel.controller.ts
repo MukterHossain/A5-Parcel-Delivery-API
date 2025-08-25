@@ -120,15 +120,18 @@ const confirmDelivery = catchAsync(async (req: Request, res: Response, next: Nex
 
 
 const getAllParcels = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-
-    // const { status, sender, receiver } = req.query
-    // const filters = {
-    //     status: status as string,
-    //     sender: sender as string,
-    //     receiver: receiver as string
-    // }
-
     const result = await ParcelService.getAllParcels(req.query)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: "All parcel retrived successfully",
+        data: result
+    })
+})
+const getAnalytics = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+
+    const result = await ParcelService.getAnalytics(req.query)
 
     sendResponse(res, {
         success: true,
@@ -193,6 +196,7 @@ export const ParcelController = {
     getDeliveryHistory,
     confirmDelivery,
     getAllParcels,
+    getAnalytics,
     updateParcelStatus,
     blockParcel,
     getTrackingParcel

@@ -5,6 +5,7 @@ import { IParcel, PARCEL_STATUS } from "./parcel.interface";
 import { Parcel } from "./parcel.model";
 import AppError from "../../errorHandler/AppError";
 import httpStatus from "http-status-codes"
+import { User } from "../user/user.model";
 
 
 
@@ -121,8 +122,6 @@ const confirmDelivery = async (parcelId: string, receiverId: string) => {
 
 // Admin
 const getAllParcels = async (query:any) => {
-
-console.log(query)
     const filters: Record<string, any> = {};
     
     if(query.status){
@@ -140,7 +139,6 @@ console.log(query)
     if(query.isBlocked !== undefined){
         filters.isBlocked = query.isBlocked = "true"
     }
-    // const searchTerm = query.searchTerm || "";
 
     if(query.searchTerm){
         const searchRegex = new RegExp(query.searchTerm, "i");
@@ -169,6 +167,36 @@ console.log(query)
             limit,
             totalPages: Math.ceil(totalParcel / limit)
         }
+    }
+}
+const getAnalytics = async (query:any) => {
+
+console.log(query)
+    const totalUsers = await User.countDocuments();
+    const totalSenders = await User.countDocuments({role: "SENDER"});
+    const totalReceivers = await User.countDocuments({role: "RECEIVER"});
+
+    const totalParcel = await Parcel.countDocuments();
+    
+    
+    
+    const parcelsStatusCount = await Parcel.aggregate([
+        {$group:{
+            _id: {
+                month: {$month: "$createdAt"},
+                year: {$year: "$createdAt"},
+                status: "$status"
+            },
+            count: {$sum:1}
+        }},
+        {$sort: {"_id.year": 1, "_id.month": 1}}
+    ])
+    return {
+        totalUsers,
+        totalSenders,
+        totalReceivers,
+        totalParcel,
+        parcelsStatusCount
     }
 }
 
@@ -256,6 +284,7 @@ export const ParcelService = {
     getDeliveryHistory,
     confirmDelivery,
     getAllParcels,
+    getAnalytics,
     updateParcelStatus,
     blockParcel,
     getTrackingParcel
