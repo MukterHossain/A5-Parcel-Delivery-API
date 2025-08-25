@@ -33,7 +33,7 @@ const createParcel = async (payload: Partial<IParcel>, senderId: string) => {
 
 
 const getAllParcel = async (senderId: string) => {
-
+    
     const parcels = await Parcel.find({ sender: senderId }).sort({ createdAt: -1 })
     const totalParcel = await Parcel.countDocuments({ sender: senderId })
     return {
@@ -120,31 +120,54 @@ const confirmDelivery = async (parcelId: string, receiverId: string) => {
 
 
 // Admin
-const getAllParcels = async (filters: { status?: string, sender?: string, receiver?: string }) => {
-    const query: any = {}
+const getAllParcels = async (query:any) => {
 
-    if (filters.status) {
-        query.status = filters.status
+console.log(query)
+    const filters: Record<string, any> = {};
+    
+    if(query.status){
+        filters.status = query.status
     }
-    if (filters.sender) {
-        query.sender = filters.sender
+    if(query.type){
+        filters.type = query.type
     }
-    if (filters.receiver) {
-        query.receiver = filters.receiver
+    if(query.sender){
+        filters.sender = query.sender
     }
+    if(query.receiver){
+        filters.receiver = query.receiver
+    }
+    if(query.isBlocked !== undefined){
+        filters.isBlocked = query.isBlocked = "true"
+    }
+    // const searchTerm = query.searchTerm || "";
 
+    if(query.searchTerm){
+        const searchRegex = new RegExp(query.searchTerm, "i");
+        filters.$or = [
+            { trackingId: { $regex: searchRegex } },
+            { pickupAddress: { $regex: searchRegex } },
+            { deliveryAddress: { $regex: searchRegex } },
+        ]
 
-
-    const parcels = await Parcel.find(query)
-        .populate("sender", "name email")
-        .populate("receiver", "name email")
-        .sort({ createdAt: -1 })
-
-    const totalParcel = await Parcel.countDocuments(query)
+    }
+    const sort = query.sort || "-createdAt";
+    const page = Number(query.page) || 1
+    const limit = Number(query.limit) || 10
+    const skip = (page -1) * limit;
+    
+    const parcels = await Parcel.find(filters)
+    .populate("sender", "name email")
+    .populate("receiver", "name email")
+    .sort(sort).skip(skip).limit(limit)
+    const totalParcel = await Parcel.countDocuments(filters)
     return {
         data: parcels,
         meta: {
-            total: totalParcel
+            total: totalParcel,
+            page,
+            limit,
+            totalPages: Math.ceil(totalParcel / limit)
         }
     }
 }
