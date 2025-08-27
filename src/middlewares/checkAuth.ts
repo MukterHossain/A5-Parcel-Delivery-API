@@ -18,7 +18,8 @@ try {
     }
     const verifiedToken = verifyToken(accessToken, envVars.JWT_ACCESS_SECRET) as JwtPayload
 
-
+// console.log("authRoles:", authRoles);
+// console.log("verifiedToken.role:", verifiedToken.role);
     const isUserExist = await User.findOne({ email: verifiedToken.email })
     if (!isUserExist) {
         throw new AppError(httpStatus.BAD_REQUEST, "User does not Exist")
@@ -32,8 +33,7 @@ try {
     if (isUserExist.isDeleted) {
         throw new AppError(httpStatus.BAD_REQUEST, "User is deleted")
     }
-
-    if(!authRoles.includes(verifiedToken.role)){
+    if(!authRoles.map(r => r.toLocaleLowerCase().trim()).includes((verifiedToken.role as string).toLocaleLowerCase().trim())){
         throw new AppError(403, "You are not permitted to view this route!!!")
     }
     req.user = verifiedToken

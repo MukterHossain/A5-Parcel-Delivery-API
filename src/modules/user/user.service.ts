@@ -9,10 +9,9 @@ import { envVars } from "../../config/env";
 
 
 const createUser = async (payload: Partial<IUser>) => {
-    console.log("received Role from payload", payload.role)
+
     const { email, password, role, ...rest } = payload;
-    console.log("Payload", payload)
-    console.log("role", role)
+ 
     const isUserExist = await User.findOne({ email })
     if (isUserExist) {
         throw new AppError(httpstatus.BAD_REQUEST, "User already exist")
@@ -106,6 +105,12 @@ const blockUser = async (userId: string) => {
     if (user.isActive === IsActive.BLOCKED) {
         throw new AppError(httpstatus.BAD_REQUEST, "User is already blocked!")
     }
+    if (user.role === Role.ADMIN) {
+        throw new AppError(httpstatus.BAD_REQUEST, "Your not authorized to unblock this user")
+    }
+    if (user.role === Role.SUPER_ADMIN) {
+        throw new AppError(httpstatus.BAD_REQUEST, "Your not authorized to unblock this user")
+    }
     user.isActive = IsActive.BLOCKED
     await user.save()
 
@@ -120,6 +125,7 @@ const unblockUser = async (userId: string) => {
     if (user.isActive === IsActive.ACTIVE) {
         throw new AppError(httpstatus.BAD_REQUEST, "User is already active")
     }
+    
     user.isActive = IsActive.ACTIVE
     await user.save()
 

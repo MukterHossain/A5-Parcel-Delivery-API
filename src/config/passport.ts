@@ -41,7 +41,6 @@ passport.use(
 
             return done(null, isUserExist)
         } catch (error) {
-            console.log(error)
             done(error)
         }
     })

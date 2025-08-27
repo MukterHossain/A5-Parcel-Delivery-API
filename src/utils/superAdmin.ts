@@ -9,10 +9,9 @@ export const superAdmin = async() =>{
     try {
         const isSuperAdminExist = await User.findOne({email: envVars.SUPER_ADMIN_EMAIL})
         if(isSuperAdminExist){
-            console.log("Supper Admin Already Exists!")
+            
             return 
         }
-        console.log("Trying to Supper Admin!")
         const hashedPassword = await bcryptjs.hash(envVars.SUPER_ADMIN_PASSWORD, Number(envVars.BCRYPT_SALT_ROUND))
 
         const authProvider : IAuthProvider = {
@@ -27,9 +26,9 @@ export const superAdmin = async() =>{
             isVarified: true,
             auths: [authProvider]
         }
-        const superAdmin = await User.create(payload)
+         await User.create(payload)
         console.log("Supper Admin Created Successfully!")
-        console.log(superAdmin)
+       
     } catch (error) {
         console.log(error)
     }

@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { getTrackingId } from "../../utils/getTrackingId";
 import { IParcel, PARCEL_STATUS } from "./parcel.interface";
 import { Parcel } from "./parcel.model";
@@ -146,6 +147,7 @@ const getAllParcels = async (query:any) => {
             { trackingId: { $regex: searchRegex } },
             { pickupAddress: { $regex: searchRegex } },
             { deliveryAddress: { $regex: searchRegex } },
+            { type: { $regex: searchRegex } },
         ]
 
     }
@@ -170,8 +172,7 @@ const getAllParcels = async (query:any) => {
     }
 }
 const getAnalytics = async (query:any) => {
-
-console.log(query)
+   
     const totalUsers = await User.countDocuments();
     const totalSenders = await User.countDocuments({role: "SENDER"});
     const totalReceivers = await User.countDocuments({role: "RECEIVER"});
@@ -199,6 +200,58 @@ console.log(query)
         parcelsStatusCount
     }
 }
+const getSenderAnalytics = async (query:any, senderId:string) => {
+    const totalPacelSent = await Parcel.countDocuments({sender: senderId});
+    const deliveredParcels = await Parcel.countDocuments({sender:senderId, status: PARCEL_STATUS.DELIVERED});
+    const intransitParcels = await Parcel.countDocuments({sender:senderId, status: PARCEL_STATUS.IN_TRANSIT});
+
+    const canceledParcel = await Parcel.countDocuments({sender:senderId, status: PARCEL_STATUS.CANCELED});
+    
+    const monthlyPacelStats = await Parcel.aggregate([
+        {$match: {sender: new mongoose.Types.ObjectId(senderId)}},
+        {$group:{
+            _id: {
+                month: {$month: "$createdAt"},
+                year: {$year: "$createdAt"},
+            },
+            count: {$sum:1}
+        }},
+        {$sort: {"_id.year": 1, "_id.month": 1}}
+    ])
+    return {
+        totalPacelSent,
+        deliveredParcels,
+        intransitParcels,
+        canceledParcel,
+        monthlyPacelStats
+    }
+}
+const getReceiverAnalytics = async (query:any, receiverId:string) => {
+    const totalPacelReceived = await Parcel.countDocuments({receiver: receiverId});
+    const deliveredParcels = await Parcel.countDocuments({receiver:receiverId, status: PARCEL_STATUS.DELIVERED});
+    const intransitParcels = await Parcel.countDocuments({receiver:receiverId, status: PARCEL_STATUS.IN_TRANSIT});
+
+    const canceledParcel = await Parcel.countDocuments({receiver:receiverId, status: PARCEL_STATUS.CANCELED});
+    
+    const monthlyPacelStats = await Parcel.aggregate([
+        {$match: {receiver: new mongoose.Types.ObjectId(receiverId)}},
+        {$group:{
+            _id: {
+                month: {$month: "$createdAt"},
+                year: {$year: "$createdAt"},
+            },
+            count: {$sum:1}
+        }},
+        {$sort: {"_id.year": 1, "_id.month": 1}}
+    ])
+    return {
+        totalPacelReceived,
+        deliveredParcels,
+        intransitParcels,
+        canceledParcel,
+        monthlyPacelStats
+    }
+}
 
 const updateParcelStatus = async (parcelId: string, newStatus: PARCEL_STATUS, adminId: string) => {
     const parcel = await Parcel.findById(parcelId)
@@ -207,14 +260,14 @@ const updateParcelStatus = async (parcelId: string, newStatus: PARCEL_STATUS, ad
     }
     const currentStatus = parcel.status
     const validTransitions: Record<PARCEL_STATUS, PARCEL_STATUS[]> = {
-        [PARCEL_STATUS.REQUESTED]: [PARCEL_STATUS.APPROVED],
+        [PARCEL_STATUS.REQUESTED]: [PARCEL_STATUS.APPROVED, PARCEL_STATUS.CANCELED, PARCEL_STATUS.BLOCKED, PARCEL_STATUS.UNBLOCKED],
         [PARCEL_STATUS.APPROVED]: [PARCEL_STATUS.DISPATCHED],
         [PARCEL_STATUS.DISPATCHED]: [PARCEL_STATUS.IN_TRANSIT],
         [PARCEL_STATUS.IN_TRANSIT]: [PARCEL_STATUS.DELIVERED],
         [PARCEL_STATUS.DELIVERED]: [],
         [PARCEL_STATUS.CANCELED]: [],
-        [PARCEL_STATUS.BLOCKED]: [],
-        [PARCEL_STATUS.UNBLOCKED]: []
+        [PARCEL_STATUS.BLOCKED]: [PARCEL_STATUS.UNBLOCKED],
+        [PARCEL_STATUS.UNBLOCKED]: [PARCEL_STATUS.BLOCKED],
     }
     if (!validTransitions[currentStatus]?.includes(newStatus)) {
         throw new AppError(401, `Cannot update parcel status ${currentStatus} to ${newStatus}`)
@@ -235,6 +288,9 @@ const blockParcel = async (parcelId: string, adminId: string) => {
     const parcel = await Parcel.findById(parcelId)
     if (!parcel) {
         throw new AppError(401, "Parcel not found")
+    }
+    if (parcel.status === "DELIVERED" || parcel.status === "CANCELED") {
+        throw new AppError(401, "Delivered or canceled parcels cannot be blocked")
     }
 
     parcel.isBlocked = !parcel.isBlocked;
@@ -260,7 +316,7 @@ const getTrackingParcel = async (trackingId: string) => {
         throw new AppError(401, "Parcel not found with this tracking ID")
     }
 
-    parcel.isBlocked = !parcel.isBlocked;
+    // parcel.isBlocked = !parcel.isBlocked;
 
     return {
         trackingId: parcel.trackingId,
@@ -285,6 +341,8 @@ export const ParcelService = {
     confirmDelivery,
     getAllParcels,
     getAnalytics,
+    getSenderAnalytics,
+    getReceiverAnalytics,
     updateParcelStatus,
     blockParcel,
     getTrackingParcel

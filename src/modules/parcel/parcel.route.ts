@@ -12,6 +12,8 @@ const router = Router()
 router.post("/", checkAuth(Role.SENDER), ParcelController.createParcel)
 router.get("/me", checkAuth(Role.SENDER), ParcelController.getAllParcel)
 router.patch("/cancel/:id", checkAuth(Role.SENDER), ParcelController.cancelParcel)
+router.get("/analytic", checkAuth(Role.SENDER), ParcelController.getSenderAnalytics)
+
 
 // Sender and Receiver
 router.get("/:id/status-log", checkAuth(Role.SENDER, Role.RECEIVER), ParcelController.getParcelStatusLog)
@@ -20,6 +22,7 @@ router.get("/:id/status-log", checkAuth(Role.SENDER, Role.RECEIVER), ParcelContr
 router.get("/incoming", checkAuth(Role.RECEIVER), ParcelController.getIncomingParcels)
 router.patch("/confirm-delivery/:id", checkAuth(Role.RECEIVER), ParcelController.confirmDelivery)
 router.get("/delivery-history", checkAuth(Role.RECEIVER), ParcelController.getDeliveryHistory)
+router.get("/Analytic", checkAuth(Role.RECEIVER), ParcelController.getReceiverAnalytics)
 
 
 // ‍Admin

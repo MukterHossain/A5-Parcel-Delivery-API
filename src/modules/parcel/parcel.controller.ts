@@ -136,7 +136,29 @@ const getAnalytics = catchAsync(async (req: Request, res: Response, next: NextFu
     sendResponse(res, {
         success: true,
         statusCode: 200,
-        message: "All parcel retrived successfully",
+        message: "Parcel analytics retrived successfully",
+        data: result
+    })
+})
+const getSenderAnalytics = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const senderId = req.user as JwtPayload
+    const result = await ParcelService.getSenderAnalytics(req.query, senderId.userId)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: "Sender analytics retrived successfully",
+        data: result
+    })
+})
+const getReceiverAnalytics = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const receiver= req.user as JwtPayload
+    const result = await ParcelService.getReceiverAnalytics(req.query, receiver.reciverId)
+
+    sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: "Receiver analytics retrived successfully",
         data: result
     })
 })
@@ -197,6 +219,8 @@ export const ParcelController = {
     confirmDelivery,
     getAllParcels,
     getAnalytics,
+    getSenderAnalytics,
+    getReceiverAnalytics,
     updateParcelStatus,
     blockParcel,
     getTrackingParcel
