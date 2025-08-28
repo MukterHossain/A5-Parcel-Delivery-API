@@ -108,17 +108,40 @@ const confirmDelivery = (0, catchAsync_1.catchAsync)((req, res, next) => __await
     });
 }));
 const getAllParcels = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { status, sender, receiver } = req.query;
-    const filters = {
-        status: status,
-        sender: sender,
-        receiver: receiver
-    };
-    const result = yield parcel_service_1.ParcelService.getAllParcels(filters);
+    const result = yield parcel_service_1.ParcelService.getAllParcels(req.query);
     (0, sendResponse_1.sendResponse)(res, {
         success: true,
         statusCode: 200,
         message: "All parcel retrived successfully",
+        data: result
+    });
+}));
+const getAnalytics = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield parcel_service_1.ParcelService.getAnalytics(req.query);
+    (0, sendResponse_1.sendResponse)(res, {
+        success: true,
+        statusCode: 200,
+        message: "Parcel analytics retrived successfully",
+        data: result
+    });
+}));
+const getSenderAnalytics = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const senderId = req.user;
+    const result = yield parcel_service_1.ParcelService.getSenderAnalytics(req.query, senderId.userId);
+    (0, sendResponse_1.sendResponse)(res, {
+        success: true,
+        statusCode: 200,
+        message: "Sender analytics retrived successfully",
+        data: result
+    });
+}));
+const getReceiverAnalytics = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const receiver = req.user;
+    const result = yield parcel_service_1.ParcelService.getReceiverAnalytics(req.query, receiver.reciverId);
+    (0, sendResponse_1.sendResponse)(res, {
+        success: true,
+        statusCode: 200,
+        message: "Receiver analytics retrived successfully",
         data: result
     });
 }));
@@ -166,6 +189,9 @@ exports.ParcelController = {
     getDeliveryHistory,
     confirmDelivery,
     getAllParcels,
+    getAnalytics,
+    getSenderAnalytics,
+    getReceiverAnalytics,
     updateParcelStatus,
     blockParcel,
     getTrackingParcel

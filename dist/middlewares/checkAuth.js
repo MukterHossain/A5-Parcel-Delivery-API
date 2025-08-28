@@ -22,11 +22,13 @@ const AppError_1 = __importDefault(require("../errorHandler/AppError"));
 const jwt_1 = require("../utils/jwt");
 const checkAuth = (...authRoles) => (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const accessToken = req.headers.authorization;
+        const accessToken = req.headers.authorization || req.cookies.accessToken;
         if (!accessToken) {
             throw new AppError_1.default(403, "No Token Recieved");
         }
         const verifiedToken = (0, jwt_1.verifyToken)(accessToken, env_1.envVars.JWT_ACCESS_SECRET);
+        // console.log("authRoles:", authRoles);
+        // console.log("verifiedToken.role:", verifiedToken.role);
         const isUserExist = yield user_model_1.User.findOne({ email: verifiedToken.email });
         if (!isUserExist) {
             throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "User does not Exist");
@@ -40,7 +42,7 @@ const checkAuth = (...authRoles) => (req, res, next) => __awaiter(void 0, void 0
         if (isUserExist.isDeleted) {
             throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "User is deleted");
         }
-        if (!authRoles.includes(verifiedToken.role)) {
+        if (!authRoles.map(r => r.toLocaleLowerCase().trim()).includes(verifiedToken.role.toLocaleLowerCase().trim())) {
             throw new AppError_1.default(403, "You are not permitted to view this route!!!");
         }
         req.user = verifiedToken;

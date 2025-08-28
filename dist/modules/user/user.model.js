@@ -29,7 +29,10 @@ const userSchema = new mongoose_1.Schema({
         default: user_interface_1.IsActive.ACTIVE,
     },
     isVarified: { type: Boolean, default: false },
-    auths: [authPorviderSchema],
+    auths: {
+        type: [authPorviderSchema],
+        default: []
+    },
 }, {
     timestamps: true,
     versionKey: false

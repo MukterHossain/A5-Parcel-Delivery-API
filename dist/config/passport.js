@@ -28,10 +28,10 @@ passport_1.default.use(new passport_local_1.Strategy({
     try {
         const isUserExist = yield user_model_1.User.findOne({ email });
         if (!isUserExist) {
-            return done(null, false, { message: "User  does not Exist" });
+            return done(null, false, { message: "User does not Exist" });
         }
         if (!isUserExist.isVarified) {
-            return done(null, false, { message: "User  is not verified" });
+            return done(null, false, { message: "User is not verified" });
         }
         if (isUserExist.isActive === user_interface_1.IsActive.BLOCKED || isUserExist.isActive === user_interface_1.IsActive.INACTIVE) {
             return done(null, false, { message: `User is ${isUserExist.isActive}` });
@@ -50,7 +50,6 @@ passport_1.default.use(new passport_local_1.Strategy({
         return done(null, isUserExist);
     }
     catch (error) {
-        console.log(error);
         done(error);
     }
 })));

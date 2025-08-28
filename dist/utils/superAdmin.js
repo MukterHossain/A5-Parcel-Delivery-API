@@ -22,10 +22,8 @@ const superAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const isSuperAdminExist = yield user_model_1.User.findOne({ email: env_1.envVars.SUPER_ADMIN_EMAIL });
         if (isSuperAdminExist) {
-            console.log("Supper Admin Already Exists!");
             return;
         }
-        console.log("Trying to Supper Admin!");
         const hashedPassword = yield bcryptjs_1.default.hash(env_1.envVars.SUPER_ADMIN_PASSWORD, Number(env_1.envVars.BCRYPT_SALT_ROUND));
         const authProvider = {
             provider: 'credential',
@@ -39,9 +37,8 @@ const superAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
             isVarified: true,
             auths: [authProvider]
         };
-        const superAdmin = yield user_model_1.User.create(payload);
+        yield user_model_1.User.create(payload);
         console.log("Supper Admin Created Successfully!");
-        console.log(superAdmin);
     }
     catch (error) {
         console.log(error);

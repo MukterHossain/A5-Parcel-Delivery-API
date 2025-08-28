@@ -31,10 +31,7 @@ const AppError_1 = __importDefault(require("../../errorHandler/AppError"));
 const http_status_codes_1 = __importDefault(require("http-status-codes"));
 const env_1 = require("../../config/env");
 const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("received Role from payload", payload.role);
     const { email, password, role } = payload, rest = __rest(payload, ["email", "password", "role"]);
-    console.log("Payload", payload);
-    console.log("role", role);
     const isUserExist = yield user_model_1.User.findOne({ email });
     if (isUserExist) {
         throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "User already exist");
@@ -77,6 +74,12 @@ const updateUser = (userId, payload, decodedToken) => __awaiter(void 0, void 0, 
     const newUpdatedUser = yield user_model_1.User.findByIdAndUpdate(userId, payload, { new: true, runValidators: true });
     return newUpdatedUser;
 });
+const getMe = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(userId).select("-password");
+    return {
+        data: user
+    };
+});
 const getAllUsers = () => __awaiter(void 0, void 0, void 0, function* () {
     const users = yield user_model_1.User.find();
     const totalUsers = yield user_model_1.User.countDocuments();
@@ -87,6 +90,12 @@ const getAllUsers = () => __awaiter(void 0, void 0, void 0, function* () {
         }
     };
 });
+const getAllReceivers = () => __awaiter(void 0, void 0, void 0, function* () {
+    const users = yield user_model_1.User.find({ role: user_interface_1.Role.RECEIVER }).select("_id name email");
+    return {
+        data: users
+    };
+});
 const blockUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(userId);
     if (!user) {
@@ -94,6 +103,12 @@ const blockUser = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     }
     if (user.isActive === user_interface_1.IsActive.BLOCKED) {
         throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "User is already blocked!");
+    }
+    if (user.role === user_interface_1.Role.ADMIN) {
+        throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "Your not authorized to unblock this user");
+    }
+    if (user.role === user_interface_1.Role.SUPER_ADMIN) {
+        throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "Your not authorized to unblock this user");
     }
     user.isActive = user_interface_1.IsActive.BLOCKED;
     yield user.save();
@@ -129,6 +144,8 @@ const updateUserRole = (adminId, userId, role) => __awaiter(void 0, void 0, void
 exports.UserService = {
     createUser,
     getAllUsers,
+    getAllReceivers,
+    getMe,
     updateUser,
     blockUser,
     unblockUser,

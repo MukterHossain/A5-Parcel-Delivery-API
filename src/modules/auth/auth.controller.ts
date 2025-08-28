@@ -60,12 +60,16 @@ const logout = catchAsync(async (req: Request, res: Response, next: NextFunction
 
     res.clearCookie("accessToken", {
         httpOnly: true,
+        // secure: true,
         secure: false,
+        // sameSite: "none"
         sameSite: "lax"
     })
     res.clearCookie("refreshToken", {
         httpOnly: true,
+        // secure: true,
         secure: false,
+        // sameSite: "none"
         sameSite: "lax"
     })
 

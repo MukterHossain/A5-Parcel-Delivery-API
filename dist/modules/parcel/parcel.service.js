@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -13,13 +46,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParcelService = void 0;
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const mongoose_1 = require("mongoose");
+const mongoose_1 = __importStar(require("mongoose"));
 const getTrackingId_1 = require("../../utils/getTrackingId");
 const parcel_interface_1 = require("./parcel.interface");
 const parcel_model_1 = require("./parcel.model");
 const AppError_1 = __importDefault(require("../../errorHandler/AppError"));
 const http_status_codes_1 = __importDefault(require("http-status-codes"));
+const user_model_1 = require("../user/user.model");
 const createParcel = (payload, senderId) => __awaiter(void 0, void 0, void 0, function* () {
     const parcelCount = yield parcel_model_1.Parcel.countDocuments();
     const trackingId = (0, getTrackingId_1.getTrackingId)(parcelCount + 1);
@@ -103,27 +138,121 @@ const confirmDelivery = (parcelId, receiverId) => __awaiter(void 0, void 0, void
     return parcel;
 });
 // Admin
-const getAllParcels = (filters) => __awaiter(void 0, void 0, void 0, function* () {
-    const query = {};
-    if (filters.status) {
-        query.status = filters.status;
+const getAllParcels = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const filters = {};
+    if (query.status) {
+        filters.status = query.status;
     }
-    if (filters.sender) {
-        query.sender = filters.sender;
+    if (query.type) {
+        filters.type = query.type;
     }
-    if (filters.receiver) {
-        query.receiver = filters.receiver;
+    if (query.sender) {
+        filters.sender = query.sender;
     }
-    const parcels = yield parcel_model_1.Parcel.find(query)
+    if (query.receiver) {
+        filters.receiver = query.receiver;
+    }
+    if (query.isBlocked !== undefined) {
+        filters.isBlocked = query.isBlocked = "true";
+    }
+    if (query.searchTerm) {
+        const searchRegex = new RegExp(query.searchTerm, "i");
+        filters.$or = [
+            { trackingId: { $regex: searchRegex } },
+            { pickupAddress: { $regex: searchRegex } },
+            { deliveryAddress: { $regex: searchRegex } },
+            { type: { $regex: searchRegex } },
+        ];
+    }
+    const sort = query.sort || "-createdAt";
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const parcels = yield parcel_model_1.Parcel.find(filters)
         .populate("sender", "name email")
         .populate("receiver", "name email")
-        .sort({ createdAt: -1 });
-    const totalParcel = yield parcel_model_1.Parcel.countDocuments(query);
+        .sort(sort).skip(skip).limit(limit);
+    const totalParcel = yield parcel_model_1.Parcel.countDocuments(filters);
     return {
         data: parcels,
         meta: {
-            total: totalParcel
+            total: totalParcel,
+            page,
+            limit,
+            totalPages: Math.ceil(totalParcel / limit)
         }
+    };
+});
+const getAnalytics = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalUsers = yield user_model_1.User.countDocuments();
+    const totalSenders = yield user_model_1.User.countDocuments({ role: "SENDER" });
+    const totalReceivers = yield user_model_1.User.countDocuments({ role: "RECEIVER" });
+    const totalParcel = yield parcel_model_1.Parcel.countDocuments();
+    const parcelsStatusCount = yield parcel_model_1.Parcel.aggregate([
+        { $group: {
+                _id: {
+                    month: { $month: "$createdAt" },
+                    year: { $year: "$createdAt" },
+                    status: "$status"
+                },
+                count: { $sum: 1 }
+            } },
+        { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+    return {
+        totalUsers,
+        totalSenders,
+        totalReceivers,
+        totalParcel,
+        parcelsStatusCount
+    };
+});
+const getSenderAnalytics = (query, senderId) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalPacelSent = yield parcel_model_1.Parcel.countDocuments({ sender: senderId });
+    const deliveredParcels = yield parcel_model_1.Parcel.countDocuments({ sender: senderId, status: parcel_interface_1.PARCEL_STATUS.DELIVERED });
+    const intransitParcels = yield parcel_model_1.Parcel.countDocuments({ sender: senderId, status: parcel_interface_1.PARCEL_STATUS.IN_TRANSIT });
+    const canceledParcel = yield parcel_model_1.Parcel.countDocuments({ sender: senderId, status: parcel_interface_1.PARCEL_STATUS.CANCELED });
+    const monthlyPacelStats = yield parcel_model_1.Parcel.aggregate([
+        { $match: { sender: new mongoose_1.default.Types.ObjectId(senderId) } },
+        { $group: {
+                _id: {
+                    month: { $month: "$createdAt" },
+                    year: { $year: "$createdAt" },
+                },
+                count: { $sum: 1 }
+            } },
+        { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+    return {
+        totalPacelSent,
+        deliveredParcels,
+        intransitParcels,
+        canceledParcel,
+        monthlyPacelStats
+    };
+});
+const getReceiverAnalytics = (query, receiverId) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalPacelReceived = yield parcel_model_1.Parcel.countDocuments({ receiver: receiverId });
+    const deliveredParcels = yield parcel_model_1.Parcel.countDocuments({ receiver: receiverId, status: parcel_interface_1.PARCEL_STATUS.DELIVERED });
+    const intransitParcels = yield parcel_model_1.Parcel.countDocuments({ receiver: receiverId, status: parcel_interface_1.PARCEL_STATUS.IN_TRANSIT });
+    const canceledParcel = yield parcel_model_1.Parcel.countDocuments({ receiver: receiverId, status: parcel_interface_1.PARCEL_STATUS.CANCELED });
+    const monthlyPacelStats = yield parcel_model_1.Parcel.aggregate([
+        { $match: { receiver: new mongoose_1.default.Types.ObjectId(receiverId) } },
+        { $group: {
+                _id: {
+                    month: { $month: "$createdAt" },
+                    year: { $year: "$createdAt" },
+                },
+                count: { $sum: 1 }
+            } },
+        { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+    return {
+        totalPacelReceived,
+        deliveredParcels,
+        intransitParcels,
+        canceledParcel,
+        monthlyPacelStats
     };
 });
 const updateParcelStatus = (parcelId, newStatus, adminId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -134,14 +263,14 @@ const updateParcelStatus = (parcelId, newStatus, adminId) => __awaiter(void 0, v
     }
     const currentStatus = parcel.status;
     const validTransitions = {
-        [parcel_interface_1.PARCEL_STATUS.REQUESTED]: [parcel_interface_1.PARCEL_STATUS.APPROVED],
+        [parcel_interface_1.PARCEL_STATUS.REQUESTED]: [parcel_interface_1.PARCEL_STATUS.APPROVED, parcel_interface_1.PARCEL_STATUS.CANCELED, parcel_interface_1.PARCEL_STATUS.BLOCKED, parcel_interface_1.PARCEL_STATUS.UNBLOCKED],
         [parcel_interface_1.PARCEL_STATUS.APPROVED]: [parcel_interface_1.PARCEL_STATUS.DISPATCHED],
         [parcel_interface_1.PARCEL_STATUS.DISPATCHED]: [parcel_interface_1.PARCEL_STATUS.IN_TRANSIT],
         [parcel_interface_1.PARCEL_STATUS.IN_TRANSIT]: [parcel_interface_1.PARCEL_STATUS.DELIVERED],
         [parcel_interface_1.PARCEL_STATUS.DELIVERED]: [],
         [parcel_interface_1.PARCEL_STATUS.CANCELED]: [],
-        [parcel_interface_1.PARCEL_STATUS.BLOCKED]: [],
-        [parcel_interface_1.PARCEL_STATUS.UNBLOCKED]: []
+        [parcel_interface_1.PARCEL_STATUS.BLOCKED]: [parcel_interface_1.PARCEL_STATUS.UNBLOCKED],
+        [parcel_interface_1.PARCEL_STATUS.UNBLOCKED]: [parcel_interface_1.PARCEL_STATUS.BLOCKED],
     };
     if (!((_a = validTransitions[currentStatus]) === null || _a === void 0 ? void 0 : _a.includes(newStatus))) {
         throw new AppError_1.default(401, `Cannot update parcel status ${currentStatus} to ${newStatus}`);
@@ -160,6 +289,9 @@ const blockParcel = (parcelId, adminId) => __awaiter(void 0, void 0, void 0, fun
     if (!parcel) {
         throw new AppError_1.default(401, "Parcel not found");
     }
+    if (parcel.status === "DELIVERED" || parcel.status === "CANCELED") {
+        throw new AppError_1.default(401, "Delivered or canceled parcels cannot be blocked");
+    }
     parcel.isBlocked = !parcel.isBlocked;
     parcel.statusLogs.push({
         status: parcel.isBlocked ? parcel_interface_1.PARCEL_STATUS.BLOCKED : parcel_interface_1.PARCEL_STATUS.APPROVED,
@@ -176,7 +308,7 @@ const getTrackingParcel = (trackingId) => __awaiter(void 0, void 0, void 0, func
     if (!parcel) {
         throw new AppError_1.default(401, "Parcel not found with this tracking ID");
     }
-    parcel.isBlocked = !parcel.isBlocked;
+    // parcel.isBlocked = !parcel.isBlocked;
     return {
         trackingId: parcel.trackingId,
         status: parcel.status,
@@ -197,6 +329,9 @@ exports.ParcelService = {
     getDeliveryHistory,
     confirmDelivery,
     getAllParcels,
+    getAnalytics,
+    getSenderAnalytics,
+    getReceiverAnalytics,
     updateParcelStatus,
     blockParcel,
     getTrackingParcel
