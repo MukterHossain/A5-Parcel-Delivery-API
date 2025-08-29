@@ -17,9 +17,6 @@ try {
         throw new AppError(403, "No Token Recieved")
     }
     const verifiedToken = verifyToken(accessToken, envVars.JWT_ACCESS_SECRET) as JwtPayload
-
-// console.log("authRoles:", authRoles);
-// console.log("verifiedToken.role:", verifiedToken.role);
     const isUserExist = await User.findOne({ email: verifiedToken.email })
     if (!isUserExist) {
         throw new AppError(httpStatus.BAD_REQUEST, "User does not Exist")

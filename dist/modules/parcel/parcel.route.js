@@ -17,11 +17,12 @@ router.get("/:id/status-log", (0, checkAuth_1.checkAuth)(user_interface_1.Role.S
 router.get("/incoming", (0, checkAuth_1.checkAuth)(user_interface_1.Role.RECEIVER), parcel_controller_1.ParcelController.getIncomingParcels);
 router.patch("/confirm-delivery/:id", (0, checkAuth_1.checkAuth)(user_interface_1.Role.RECEIVER), parcel_controller_1.ParcelController.confirmDelivery);
 router.get("/delivery-history", (0, checkAuth_1.checkAuth)(user_interface_1.Role.RECEIVER), parcel_controller_1.ParcelController.getDeliveryHistory);
-router.get("/Analytic", (0, checkAuth_1.checkAuth)(user_interface_1.Role.RECEIVER), parcel_controller_1.ParcelController.getReceiverAnalytics);
+router.get("/analytics", (0, checkAuth_1.checkAuth)(user_interface_1.Role.RECEIVER), parcel_controller_1.ParcelController.getReceiverAnalytics);
 // ‍Admin
 router.get("/", (0, checkAuth_1.checkAuth)(user_interface_1.Role.ADMIN), parcel_controller_1.ParcelController.getAllParcels);
-router.get("/analytics", (0, checkAuth_1.checkAuth)(user_interface_1.Role.ADMIN), parcel_controller_1.ParcelController.getAnalytics);
+router.get("/admin-analytics", (0, checkAuth_1.checkAuth)(user_interface_1.Role.ADMIN), parcel_controller_1.ParcelController.getAnalytics);
 router.patch("/status-update/:id", (0, checkAuth_1.checkAuth)(user_interface_1.Role.ADMIN), parcel_controller_1.ParcelController.updateParcelStatus);
 router.patch("/block/:id", (0, checkAuth_1.checkAuth)(user_interface_1.Role.ADMIN), parcel_controller_1.ParcelController.blockParcel);
 router.get("/track/:trackingId", (0, checkAuth_1.checkAuth)(...Object.values(user_interface_1.Role)), parcel_controller_1.ParcelController.getTrackingParcel);
+router.get("/track/public/:trackingId", parcel_controller_1.ParcelController.getPublicTrackingParcel);
 exports.ParcelRoutes = router;

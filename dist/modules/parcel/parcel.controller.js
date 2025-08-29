@@ -136,8 +136,8 @@ const getSenderAnalytics = (0, catchAsync_1.catchAsync)((req, res, next) => __aw
     });
 }));
 const getReceiverAnalytics = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const receiver = req.user;
-    const result = yield parcel_service_1.ParcelService.getReceiverAnalytics(req.query, receiver.reciverId);
+    const receiverId = req.user;
+    const result = yield parcel_service_1.ParcelService.getReceiverAnalytics(req.query, receiverId.userId);
     (0, sendResponse_1.sendResponse)(res, {
         success: true,
         statusCode: 200,
@@ -180,6 +180,16 @@ const getTrackingParcel = (0, catchAsync_1.catchAsync)((req, res, next) => __awa
         data: result
     });
 }));
+const getPublicTrackingParcel = (0, catchAsync_1.catchAsync)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { trackingId } = req.params;
+    const result = yield parcel_service_1.ParcelService.getPublicTrackingParcel(trackingId);
+    (0, sendResponse_1.sendResponse)(res, {
+        success: true,
+        statusCode: 200,
+        message: `Parcel tracking data retrieved successfully`,
+        data: result
+    });
+}));
 exports.ParcelController = {
     createParcel,
     getAllParcel,
@@ -194,5 +204,6 @@ exports.ParcelController = {
     getReceiverAnalytics,
     updateParcelStatus,
     blockParcel,
-    getTrackingParcel
+    getTrackingParcel,
+    getPublicTrackingParcel
 };

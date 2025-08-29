@@ -7,7 +7,8 @@ import { Parcel } from "./parcel.model";
 import AppError from "../../errorHandler/AppError";
 import httpStatus from "http-status-codes"
 import { User } from "../user/user.model";
-
+import { JwtPayload } from "jsonwebtoken";
+import {ObjectId} from "mongodb"
 
 
 
@@ -227,6 +228,7 @@ const getSenderAnalytics = async (query:any, senderId:string) => {
     }
 }
 const getReceiverAnalytics = async (query:any, receiverId:string) => {
+    // const objectId = new ObjectId(String(payload.userId));
     const totalPacelReceived = await Parcel.countDocuments({receiver: receiverId});
     const deliveredParcels = await Parcel.countDocuments({receiver:receiverId, status: PARCEL_STATUS.DELIVERED});
     const intransitParcels = await Parcel.countDocuments({receiver:receiverId, status: PARCEL_STATUS.IN_TRANSIT});
@@ -240,7 +242,10 @@ const getReceiverAnalytics = async (query:any, receiverId:string) => {
                 month: {$month: "$createdAt"},
                 year: {$year: "$createdAt"},
             },
-            count: {$sum:1}
+            delivered:{$sum:{$cond:[{$eq:["$status", PARCEL_STATUS.DELIVERED]}, 1, 0]}},
+            intransit:{$sum:{$cond:[{$eq:["$status", PARCEL_STATUS.IN_TRANSIT]}, 1, 0]}},
+            canceled:{$sum:{$cond:[{$eq:["$status", PARCEL_STATUS.CANCELED]}, 1, 0]}},
+            total: {$sum:1}
         }},
         {$sort: {"_id.year": 1, "_id.month": 1}}
     ])
@@ -253,7 +258,8 @@ const getReceiverAnalytics = async (query:any, receiverId:string) => {
     }
 }
 
-const updateParcelStatus = async (parcelId: string, newStatus: PARCEL_STATUS, adminId: string) => {
+const updateParcelStatus = async (parcelId: string, status: PARCEL_STATUS, adminId: string) => {
+    console.log("updateParcelStatus", parcelId, status, adminId)
     const parcel = await Parcel.findById(parcelId)
     if (!parcel) {
         throw new AppError(401, "Parcel not found")
@@ -263,20 +269,20 @@ const updateParcelStatus = async (parcelId: string, newStatus: PARCEL_STATUS, ad
         [PARCEL_STATUS.REQUESTED]: [PARCEL_STATUS.APPROVED, PARCEL_STATUS.CANCELED, PARCEL_STATUS.BLOCKED, PARCEL_STATUS.UNBLOCKED],
         [PARCEL_STATUS.APPROVED]: [PARCEL_STATUS.DISPATCHED],
         [PARCEL_STATUS.DISPATCHED]: [PARCEL_STATUS.IN_TRANSIT],
-        [PARCEL_STATUS.IN_TRANSIT]: [PARCEL_STATUS.DELIVERED],
+        [PARCEL_STATUS.IN_TRANSIT]: [],
         [PARCEL_STATUS.DELIVERED]: [],
         [PARCEL_STATUS.CANCELED]: [],
         [PARCEL_STATUS.BLOCKED]: [PARCEL_STATUS.UNBLOCKED],
-        [PARCEL_STATUS.UNBLOCKED]: [PARCEL_STATUS.BLOCKED],
+        [PARCEL_STATUS.UNBLOCKED]: [PARCEL_STATUS.BLOCKED, PARCEL_STATUS.APPROVED],
     }
-    if (!validTransitions[currentStatus]?.includes(newStatus)) {
-        throw new AppError(401, `Cannot update parcel status ${currentStatus} to ${newStatus}`)
+    if (!validTransitions[currentStatus]?.includes(status)) {
+        throw new AppError(401, `Cannot update parcel status ${currentStatus} to ${status}`)
     }
 
 
-    parcel.status = newStatus;
+    parcel.status = status;
     parcel.statusLogs.push({
-        status: newStatus,
+        status: status,
         note: "Update by Admin",
         updatedBy: new Types.ObjectId(adminId)
     })
@@ -329,6 +335,25 @@ const getTrackingParcel = async (trackingId: string) => {
         statusLogs: parcel.statusLogs
     }
 }
+const getPublicTrackingParcel = async (trackingId: string) => {
+    const parcel = await Parcel.findOne({ trackingId })
+        .select("trackingId status deliveryAddress pickupAddress fee sender receiver statusLogs")
+
+    if (!parcel) {
+        throw new AppError(401, "Parcel not found with this tracking ID")
+    }
+
+    return {
+        trackingId: parcel.trackingId,
+        status: parcel.status,
+        deliveryAddress: parcel.deliveryAddress,
+        pickupAddress: parcel.pickupAddress,
+        fee: parcel.fee,
+        sender: parcel.sender,
+        receiver: parcel.receiver,
+        statusLogs: parcel.statusLogs
+    }
+}
 
 
 export const ParcelService = {
@@ -345,5 +370,6 @@ export const ParcelService = {
     getReceiverAnalytics,
     updateParcelStatus,
     blockParcel,
-    getTrackingParcel
+    getTrackingParcel,
+    getPublicTrackingParcel
 }

@@ -232,6 +232,7 @@ const getSenderAnalytics = (query, senderId) => __awaiter(void 0, void 0, void 0
     };
 });
 const getReceiverAnalytics = (query, receiverId) => __awaiter(void 0, void 0, void 0, function* () {
+    // const objectId = new ObjectId(String(payload.userId));
     const totalPacelReceived = yield parcel_model_1.Parcel.countDocuments({ receiver: receiverId });
     const deliveredParcels = yield parcel_model_1.Parcel.countDocuments({ receiver: receiverId, status: parcel_interface_1.PARCEL_STATUS.DELIVERED });
     const intransitParcels = yield parcel_model_1.Parcel.countDocuments({ receiver: receiverId, status: parcel_interface_1.PARCEL_STATUS.IN_TRANSIT });
@@ -243,7 +244,10 @@ const getReceiverAnalytics = (query, receiverId) => __awaiter(void 0, void 0, vo
                     month: { $month: "$createdAt" },
                     year: { $year: "$createdAt" },
                 },
-                count: { $sum: 1 }
+                delivered: { $sum: { $cond: [{ $eq: ["$status", parcel_interface_1.PARCEL_STATUS.DELIVERED] }, 1, 0] } },
+                intransit: { $sum: { $cond: [{ $eq: ["$status", parcel_interface_1.PARCEL_STATUS.IN_TRANSIT] }, 1, 0] } },
+                canceled: { $sum: { $cond: [{ $eq: ["$status", parcel_interface_1.PARCEL_STATUS.CANCELED] }, 1, 0] } },
+                total: { $sum: 1 }
             } },
         { $sort: { "_id.year": 1, "_id.month": 1 } }
     ]);
@@ -255,8 +259,9 @@ const getReceiverAnalytics = (query, receiverId) => __awaiter(void 0, void 0, vo
         monthlyPacelStats
     };
 });
-const updateParcelStatus = (parcelId, newStatus, adminId) => __awaiter(void 0, void 0, void 0, function* () {
+const updateParcelStatus = (parcelId, status, adminId) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
+    console.log("updateParcelStatus", parcelId, status, adminId);
     const parcel = yield parcel_model_1.Parcel.findById(parcelId);
     if (!parcel) {
         throw new AppError_1.default(401, "Parcel not found");
@@ -266,18 +271,18 @@ const updateParcelStatus = (parcelId, newStatus, adminId) => __awaiter(void 0, v
         [parcel_interface_1.PARCEL_STATUS.REQUESTED]: [parcel_interface_1.PARCEL_STATUS.APPROVED, parcel_interface_1.PARCEL_STATUS.CANCELED, parcel_interface_1.PARCEL_STATUS.BLOCKED, parcel_interface_1.PARCEL_STATUS.UNBLOCKED],
         [parcel_interface_1.PARCEL_STATUS.APPROVED]: [parcel_interface_1.PARCEL_STATUS.DISPATCHED],
         [parcel_interface_1.PARCEL_STATUS.DISPATCHED]: [parcel_interface_1.PARCEL_STATUS.IN_TRANSIT],
-        [parcel_interface_1.PARCEL_STATUS.IN_TRANSIT]: [parcel_interface_1.PARCEL_STATUS.DELIVERED],
+        [parcel_interface_1.PARCEL_STATUS.IN_TRANSIT]: [],
         [parcel_interface_1.PARCEL_STATUS.DELIVERED]: [],
         [parcel_interface_1.PARCEL_STATUS.CANCELED]: [],
         [parcel_interface_1.PARCEL_STATUS.BLOCKED]: [parcel_interface_1.PARCEL_STATUS.UNBLOCKED],
-        [parcel_interface_1.PARCEL_STATUS.UNBLOCKED]: [parcel_interface_1.PARCEL_STATUS.BLOCKED],
+        [parcel_interface_1.PARCEL_STATUS.UNBLOCKED]: [parcel_interface_1.PARCEL_STATUS.BLOCKED, parcel_interface_1.PARCEL_STATUS.APPROVED],
     };
-    if (!((_a = validTransitions[currentStatus]) === null || _a === void 0 ? void 0 : _a.includes(newStatus))) {
-        throw new AppError_1.default(401, `Cannot update parcel status ${currentStatus} to ${newStatus}`);
+    if (!((_a = validTransitions[currentStatus]) === null || _a === void 0 ? void 0 : _a.includes(status))) {
+        throw new AppError_1.default(401, `Cannot update parcel status ${currentStatus} to ${status}`);
     }
-    parcel.status = newStatus;
+    parcel.status = status;
     parcel.statusLogs.push({
-        status: newStatus,
+        status: status,
         note: "Update by Admin",
         updatedBy: new mongoose_1.Types.ObjectId(adminId)
     });
@@ -320,6 +325,23 @@ const getTrackingParcel = (trackingId) => __awaiter(void 0, void 0, void 0, func
         statusLogs: parcel.statusLogs
     };
 });
+const getPublicTrackingParcel = (trackingId) => __awaiter(void 0, void 0, void 0, function* () {
+    const parcel = yield parcel_model_1.Parcel.findOne({ trackingId })
+        .select("trackingId status deliveryAddress pickupAddress fee sender receiver statusLogs");
+    if (!parcel) {
+        throw new AppError_1.default(401, "Parcel not found with this tracking ID");
+    }
+    return {
+        trackingId: parcel.trackingId,
+        status: parcel.status,
+        deliveryAddress: parcel.deliveryAddress,
+        pickupAddress: parcel.pickupAddress,
+        fee: parcel.fee,
+        sender: parcel.sender,
+        receiver: parcel.receiver,
+        statusLogs: parcel.statusLogs
+    };
+});
 exports.ParcelService = {
     createParcel,
     getAllParcel,
@@ -334,5 +356,6 @@ exports.ParcelService = {
     getReceiverAnalytics,
     updateParcelStatus,
     blockParcel,
-    getTrackingParcel
+    getTrackingParcel,
+    getPublicTrackingParcel
 };
