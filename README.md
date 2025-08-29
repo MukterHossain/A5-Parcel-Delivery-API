@@ -45,6 +45,7 @@ Parcel Delivery API is a backend service for managing parcel delivery operations
 - `POST(/api/user/register)`  create user (any user)
 - `GET(/api/user/all-users)`  get all users (admin and supper admin)
 - `PATCH(/api/user/:id)`  upadte user
+- `PATCH(/api/user/me)`   user infornation
 - `PATCH(/api/user/block/:id)`  User block (by admin)
 - `PATCH(/api/user/unblock/:id)`  User unblock or active (by admin)
 - `PATCH(/api/user/update-role/:id)`  User role update (by admin)
@@ -54,15 +55,22 @@ Parcel Delivery API is a backend service for managing parcel delivery operations
 - `POST(/api/parcels/)`  create parcel
 - `GET(/api/parcels/me)`  get all parcels
 - `PATCH(/api/parcels/cancel:id)`  cancel parcels
+- `PATCH(/api/parcels/analytic)`  Sender parcels analytics
+  
 #### ➡️ **Sender and Receiver**
 - `GET(/api/parcels/:id/status-log)`  get Parcel status log
+  
 #### ➡️ **Receiver**
 - `GET(/api/parcels/incoming)`  get incoming parcel
 - `PATCH(/api/parcels/confirm-delivery/:id)`  confirm delivery
+- `PATCH(/api/parcels/analytics)`  receiver analytics
 - `GET(/api/parcels/delivery-history)`  get delivery history
+  
 #### ➡️ **Admin**
 - `GET(/api/parcels/)`  get all parcels
+- `PATCH(/api/parcels/admin-analytics)`  admin analytics
 - `PATCH(/api/parcels/status-update/:id)`  update status
 - `PATCH(/api/parcels/block/:id)`  Block parcel
 #### ➡️ **All user**
 - `PATCH(/api/parcels/track/:trackingId)`  tracking parcel
+- `PATCH(/api/parcels/track/public/:trackingId)` public tracking parcel
